@@ -1,0 +1,7 @@
+{
+  "name": "argoNotif",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
