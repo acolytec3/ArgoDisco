@@ -1,29 +1,37 @@
 const Web3 = require('web3');
-var Discord = require('discord.js');
-var votingABI = require('./voting.json');
 const Subspace = require('@embarklabs/subspace'); 
-var auth = require('./auth.json');
-var bot = new Discord.Client();
+const Discord = require('discord.js');
+const votingABI = require('./voting.json');
+const tokensABI = require('./tokens.json');
+const financeABI = require('./finance.json'); 
+const config = require('./bot_config.json');
 
-
-const web3 = new Web3("wss://mainnet.infura.io/ws/v3/" + auth.infuraToken);
-
+const web3 = new Web3("wss://mainnet.infura.io/ws/v3/" + config.infuraToken);
 const subspace = new Subspace.default(web3);
 
-bot.login(auth.token);
+const bot = new Discord.Client();
+
+bot.login(config.botDiscordToken);
 
 async function initialize(channel){
     await subspace.init();
-    votingContract = subspace.contract({abi: votingABI, address: '0x9b8e397c483449623525efda8f80d9b52481a3a1'});
+    votingContract = subspace.contract({abi: votingABI, address: config.votingAddress});
+    tokensContract = subspace.contract({abi: tokensABI, address: config.tokensAddress});
+    financeContract = subspace.contract({abi: financeABI, address: config.financeAddress});
     const startVote$ = votingContract.events.StartVote.track({fromBlock: 	9892761 });
-    startVote$.subscribe((vote) => channel.send('Vote # ' + vote['0'] + " - " + vote['2']));
+    const mintToken$ = tokensContract.events.NewVesting.track({fromBlock: 	9892761 });
+    const burnToken$ = tokensContract.events.RevokeVesting.track({fromBlock: 	9892761 });
+    const newPayment$ = financeContract.events.NewPayment.track({fromBlock: 9892761});
+    startVote$.subscribe(function(vote){
+        channel.send('Vote # ' + vote['0'] + " - " + vote['2'])
+        console.log(vote)
+    });
 }
 
 bot.on('ready', () => {
     console.log(`Logged in as ${bot.user.tag}!`)
-    const channel = bot.channels.cache.get('719175379218202688');
+    const channel = bot.channels.cache.find(channel => channel.name == 'general')
     channel.send('Howdy')
-    console.log(channel);
     initialize(channel);
 });
 
