@@ -18,13 +18,24 @@ async function initialize(channel){
     votingContract = subspace.contract({abi: votingABI, address: config.votingAddress});
     tokensContract = subspace.contract({abi: tokensABI, address: config.tokensAddress});
     financeContract = subspace.contract({abi: financeABI, address: config.financeAddress});
-    const startVote$ = votingContract.events.StartVote.track({fromBlock: 	9892761 });
-    const mintToken$ = tokensContract.events.NewVesting.track({fromBlock: 	9892761 });
-    const burnToken$ = tokensContract.events.RevokeVesting.track({fromBlock: 	9892761 });
-    const newPayment$ = financeContract.events.NewPayment.track({fromBlock: 9892761});
+    const startVote$ = votingContract.events.StartVote.track({fromBlock: 9892761 });
+    const mintToken$ = tokensContract.events.NewVesting.track({fromBlock: 9892761 });
+    const burnToken$ = tokensContract.events.RevokeVesting.track({fromBlock: 0 });
+    const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: 0});
+
     startVote$.subscribe(function(vote){
         channel.send('Vote # ' + vote['0'] + " - " + vote['2'])
         console.log(vote)
+    });
+    mintToken$.subscribe(function(mint){
+        console.log(mint);
+    });
+    burnToken$.subscribe(function(burn){
+        console.log(burn);
+    });
+    newPayment$.subscribe(function(payment){
+        console.log(payment);
+        channel.send(`New Payment of ${web3.utils.fromWei(payment.amount)} DAI ${payment.incoming == true ? 'from' : 'to'} address ${payment.entity} with description - ${payment.reference}`)
     });
 }
 
