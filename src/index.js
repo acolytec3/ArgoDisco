@@ -19,20 +19,24 @@ async function initialize(channel){
     tokensContract = subspace.contract({abi: tokensABI, address: config.tokensAddress});
     financeContract = subspace.contract({abi: financeABI, address: config.financeAddress});
     const startVote$ = votingContract.events.StartVote.track({fromBlock: 9892761 });
-    const mintToken$ = tokensContract.events.NewVesting.track({fromBlock: 9892761 });
-    const burnToken$ = tokensContract.events.RevokeVesting.track({fromBlock: 0 });
-    const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: 0});
+    const transferToken$ = tokensContract.events.Transfer.track({fromBlock:  9832523 });
+    const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: 9892761});
 
     startVote$.subscribe(function(vote){
-        channel.send('Vote # ' + vote['0'] + " - " + vote['2'])
+        channel.send(`Vote # ${vote['0']} ${vote['2']} https://mainnet.aragon.org/?#/arca/0x9b8e397c483449623525efda8f80d9b52481a3a1/vote/${vote['0']}`)
         console.log(vote)
     });
-    mintToken$.subscribe(function(mint){
-        console.log(mint);
+    transferToken$.subscribe(function(transfer){
+        console.log(transfer);
+        if (transfer['_from'] === '0x0000000000000000000000000000000000000000') {
+            channel.send(`New ARCA token minted for ${transfer['_to']}`);
+        }
+        else channel.send(`ARCA token burned for ${transfer['_from']}`)
+        
     });
-    burnToken$.subscribe(function(burn){
+/*    burnToken$.subscribe(function(burn){
         console.log(burn);
-    });
+    });*/
     newPayment$.subscribe(function(payment){
         console.log(payment);
         channel.send(`New Payment of ${web3.utils.fromWei(payment.amount)} DAI ${payment.incoming == true ? 'from' : 'to'} address ${payment.entity} with description - ${payment.reference}`)
