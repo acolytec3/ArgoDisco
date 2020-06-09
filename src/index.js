@@ -4,8 +4,8 @@ const Discord = require('discord.js');
 const votingABI = require('./voting.json');
 const tokensABI = require('./tokens.json');
 const financeABI = require('./finance.json'); 
-const config = require('./bot_config.json');
-
+var config = require('./bot_config.json');
+const fs = require('fs');
 const web3 = new Web3("wss://mainnet.infura.io/ws/v3/" + config.infuraToken);
 const subspace = new Subspace.default(web3);
 
@@ -18,28 +18,42 @@ async function initialize(channel){
     votingContract = subspace.contract({abi: votingABI, address: config.votingAddress});
     tokensContract = subspace.contract({abi: tokensABI, address: config.tokensAddress});
     financeContract = subspace.contract({abi: financeABI, address: config.financeAddress});
-    const startVote$ = votingContract.events.StartVote.track({fromBlock: 9892761 });
-    const transferToken$ = tokensContract.events.Transfer.track({fromBlock:  9832523 });
-    const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: 9892761});
+    const startVote$ = votingContract.events.StartVote.track({fromBlock: config.lastBlock});
+    const castVote$ = votingContract.events.CastVote.track({fromBlock: config.lastBlock});
+    const transferToken$ = tokensContract.events.Transfer.track({fromBlock: config.lastBlock});
+    const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: config.lastBlock});
 
     startVote$.subscribe(function(vote){
         channel.send(`Vote # ${vote['0']} ${vote['2']} https://mainnet.aragon.org/?#/arca/0x9b8e397c483449623525efda8f80d9b52481a3a1/vote/${vote['0']}`)
         console.log(vote)
+        config.lastBlock = vote.blockNumber;
+        fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
     });
+    castVote$.subscribe(function(vote){
+        let voter = (config.members[vote['voter'].toLowerCase()] != undefined) ? config.members[vote['voter'].toLowerCase()] : vote['voter'];
+        channel.send(`${voter} voted ${vote.supports === true ? 'for' : 'against'} proposal #${vote.voteId}`)
+        console.log(vote);
+        config.lastBlock = vote.blockNumber;
+        fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
+    })
     transferToken$.subscribe(function(transfer){
         console.log(transfer);
         if (transfer['_from'] === '0x0000000000000000000000000000000000000000') {
-            channel.send(`New ARCA token minted for ${transfer['_to']}`);
+            let to = (config.members[transfer['_to'].toLowerCase()] != undefined) ? config.members[transfer['_to'].toLowerCase()] : transfer['_to']
+            channel.send(`New ARCA token minted for ${to}`);
         }
-        else channel.send(`ARCA token burned for ${transfer['_from']}`)
-        
+        else {
+            let from = (config.members[transfer['_from'].toLowerCase()] != undefined) ? config.members[transfer['_from'].toLowerCase()] : transfer['_from']
+            channel.send(`New ARCA token minted for ${from}`);
+        }
+        config.lastBlock = transfer.blockNumber;
+        fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
     });
-/*    burnToken$.subscribe(function(burn){
-        console.log(burn);
-    });*/
     newPayment$.subscribe(function(payment){
         console.log(payment);
         channel.send(`New Payment of ${web3.utils.fromWei(payment.amount)} DAI ${payment.incoming == true ? 'from' : 'to'} address ${payment.entity} with description - ${payment.reference}`)
+        config.lastBlock = payment.blockNumber;
+        fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
     });
 }
 

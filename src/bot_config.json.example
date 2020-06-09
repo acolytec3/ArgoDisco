@@ -3,5 +3,10 @@
  "infuraToken": "",
  "votingAddress": "",
  "tokensAddress": "",
- "financeAddress": ""
+ "financeAddress": "",
+ "lastBlock": "",
+ "members": {
+     "0x1234...":"member name",
+     "0x5678...":"member 2"
+ }
 }
