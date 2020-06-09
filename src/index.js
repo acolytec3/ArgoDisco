@@ -31,7 +31,7 @@ async function initialize(channel){
     });
     castVote$.subscribe(function(vote){
         let voter = (config.members[vote['voter'].toLowerCase()] != undefined) ? config.members[vote['voter'].toLowerCase()] : vote['voter'];
-        channel.send(`${voter} voted ${vote.supports === true ? 'for' : 'against'} proposal #${vote.voteId}`)
+        channel.send(`**${voter}** voted __${vote.supports === true ? 'for' : 'against'}__ proposal #${vote.voteId}`)
         console.log(vote);
         config.lastBlock = vote.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
@@ -40,11 +40,11 @@ async function initialize(channel){
         console.log(transfer);
         if (transfer['_from'] === '0x0000000000000000000000000000000000000000') {
             let to = (config.members[transfer['_to'].toLowerCase()] != undefined) ? config.members[transfer['_to'].toLowerCase()] : transfer['_to']
-            channel.send(`New ARCA token minted for ${to}`);
+            channel.send(`New ARCA token **minted** for ${to}`);
         }
         else {
             let from = (config.members[transfer['_from'].toLowerCase()] != undefined) ? config.members[transfer['_from'].toLowerCase()] : transfer['_from']
-            channel.send(`New ARCA token minted for ${from}`);
+            channel.send(`New ARCA token **burned** for ${from}`);
         }
         config.lastBlock = transfer.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
