@@ -22,16 +22,16 @@ async function initialize(channel){
     const castVote$ = votingContract.events.CastVote.track({fromBlock: config.lastBlock});
     const transferToken$ = tokensContract.events.Transfer.track({fromBlock: config.lastBlock});
     const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: config.lastBlock});
-
+/*
     startVote$.subscribe(function(vote){
-        channel.send(`Vote # ${vote['0']} ${vote['2']} https://mainnet.aragon.org/?#/arca/0x9b8e397c483449623525efda8f80d9b52481a3a1/vote/${vote['0']}`)
+        channel.send(`**Vote # ${vote['0']} ${vote['2']}** https://mainnet.aragon.org/?#/arca/0x9b8e397c483449623525efda8f80d9b52481a3a1/vote/${vote['0']}`)
         console.log(vote)
         config.lastBlock = vote.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
     });
     castVote$.subscribe(function(vote){
         let voter = (config.members[vote['voter'].toLowerCase()] != undefined) ? config.members[vote['voter'].toLowerCase()] : vote['voter'];
-        channel.send(`**${voter}** voted __${vote.supports === true ? 'for' : 'against'}__ proposal #${vote.voteId}`)
+        channel.send(`**${voter}** voted **${vote.supports === true ? 'for' : 'against'}** proposal **#${vote.voteId}**`)
         console.log(vote);
         config.lastBlock = vote.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
@@ -44,14 +44,14 @@ async function initialize(channel){
         }
         else {
             let from = (config.members[transfer['_from'].toLowerCase()] != undefined) ? config.members[transfer['_from'].toLowerCase()] : transfer['_from']
-            channel.send(`New ARCA token **burned** for ${from}`);
+            channel.send(`New ARCA token **burned** for **${from}**`);
         }
         config.lastBlock = transfer.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
-    });
+    });*/
     newPayment$.subscribe(function(payment){
         console.log(payment);
-        channel.send(`New Payment of ${web3.utils.fromWei(payment.amount)} DAI ${payment.incoming == true ? 'from' : 'to'} address ${payment.entity} with description - ${payment.reference}`)
+        channel.send(`New Payment of **${web3.utils.fromWei(payment.amount)} DAI ${payment.incoming == true ? 'from' : 'to'}** address **${payment.entity}** - **${payment.reference}**`)
         config.lastBlock = payment.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
     });
