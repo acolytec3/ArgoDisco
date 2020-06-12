@@ -22,7 +22,7 @@ async function initialize(channel){
     const castVote$ = votingContract.events.CastVote.track({fromBlock: config.lastBlock});
     const transferToken$ = tokensContract.events.Transfer.track({fromBlock: config.lastBlock});
     const newPayment$ = financeContract.events.NewTransaction.track({fromBlock: config.lastBlock});
-/*
+
     startVote$.subscribe(function(vote){
         channel.send(`**Vote # ${vote['0']} ${vote['2']}** https://mainnet.aragon.org/?#/arca/0x9b8e397c483449623525efda8f80d9b52481a3a1/vote/${vote['0']}`)
         console.log(vote)
@@ -48,7 +48,7 @@ async function initialize(channel){
         }
         config.lastBlock = transfer.blockNumber;
         fs.writeFile('src/bot_config.json', JSON.stringify(config), ()=> {});
-    });*/
+    });
     newPayment$.subscribe(function(payment){
         console.log(payment);
         channel.send(`New Payment of **${web3.utils.fromWei(payment.amount)} DAI ${payment.incoming == true ? 'from' : 'to'}** address **${payment.entity}** - **${payment.reference}**`)
